@@ -3,6 +3,7 @@ package com.thelightphone.sdk
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
@@ -12,6 +13,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.datastore.preferences.preferencesDataStore
 
 class LightActivity internal constructor() : ComponentActivity() {
@@ -27,9 +31,9 @@ class LightActivity internal constructor() : ComponentActivity() {
     }
 
     internal fun goBack() {
-        currentScreen.value?.let {
-            it.notifyWillHide()
-        }
+        val popped = currentScreen.value ?: return
+        popped.notifyWillHide()
+        popped.destroy()
         backStack.removeAt(backStack.lastIndex)
         if (backStack.isEmpty()) {
             finish()
@@ -42,6 +46,12 @@ class LightActivity internal constructor() : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        val controller = WindowInsetsControllerCompat(window, window.decorView)
+        controller.hide(WindowInsetsCompat.Type.systemBars())
+        controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        window.addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
 
         val initialClassName = packageManager
             .getActivityInfo(componentName, PackageManager.GET_META_DATA)
@@ -101,6 +111,10 @@ class LightActivity internal constructor() : ComponentActivity() {
     }
 }
 
+/**
+ * Wrapper class to pass around an instance of LightActivity without exposing it to
+ * user code. Sorry! :)
+ */
 class SealedLightActivity(internal val activity: LightActivity)
 
 internal val Context.dataStore by preferencesDataStore(

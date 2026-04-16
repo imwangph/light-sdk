@@ -20,6 +20,9 @@ class LightSdkPlugin : Plugin<Project> {
             "androidx.lifecycle",
             "androidx.datastore",
             "com.squareup.okhttp3:okhttp",
+            "io.ktor",
+            "org.jetbrains.kotlinx:kotlinx-serialization",
+            "org.jetbrains.kotlinx:kotlinx-io",
         )
 
         val ALLOWED_PLUGINS = setOf(
@@ -28,6 +31,7 @@ class LightSdkPlugin : Plugin<Project> {
             "org.jetbrains.kotlin.android",
             "org.jetbrains.kotlin.jvm",
             "org.jetbrains.kotlin.plugin.compose",
+            "org.jetbrains.kotlin.plugin.serialization",
             "com.thelightphone.light-sdk",
         )
 

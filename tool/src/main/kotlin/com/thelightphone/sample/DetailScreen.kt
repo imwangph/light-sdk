@@ -18,14 +18,25 @@ import com.thelightphone.sdk.LightScreen
 import com.thelightphone.sdk.LightViewModel
 import com.thelightphone.sdk.SealedLightActivity
 import com.thelightphone.sdk.SimpleLightScreen
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.get
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import org.json.JSONObject
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+
+@Serializable
+data class TimezoneResponse(
+    val timeZone: String = "",
+    val currentLocalTime: String = "",
+)
 
 class DetailViewModel : LightViewModel() {
     sealed class State {
@@ -34,29 +45,35 @@ class DetailViewModel : LightViewModel() {
         data class Error(val message: String) : State()
     }
 
-    private val client = OkHttpClient()
+    private val client = HttpClient(OkHttp) {
+        install(ContentNegotiation) {
+            json(Json { ignoreUnknownKeys = true })
+        }
+    }
 
     private val _state = MutableStateFlow<State>(State.Loading)
     val state: StateFlow<State> = _state
 
     override fun onScreenShow(screen: SimpleLightScreen) {
+        println(this)
         super.onScreenShow(screen)
         _state.value = State.Loading
         viewModelScope.launch(Dispatchers.IO) {
             delay(500)
             _state.value = try {
-                val request = Request.Builder()
-                    .url("https://timeapi.io/api/timezone/zone?timeZone=Europe/London")
-                    .build()
-                val response = client.newCall(request).execute()
-                val body = response.body.string()
-                val json = JSONObject(body)
-                val localTime = json.getString("currentLocalTime")
-                State.Time(localTime)
+                val response: TimezoneResponse = client
+                    .get("https://timeapi.io/api/timezone/zone?timeZone=Europe/London")
+                    .body()
+                State.Time(response.currentLocalTime)
             } catch (e: Exception) {
                 State.Error(e.message ?: "Unknown error")
             }
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        client.close()
     }
 }
 

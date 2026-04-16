@@ -5,9 +5,13 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.ViewModelStoreOwner
 
-abstract class SimpleLightScreen(sealedActivity: SealedLightActivity) {
+abstract class SimpleLightScreen(sealedActivity: SealedLightActivity) : ViewModelStoreOwner {
     internal val activity = sealedActivity.activity
+
+    override val viewModelStore: ViewModelStore = ViewModelStore()
 
     protected val dataStore: DataStore<Preferences>
         get() = activity.dataStore
@@ -33,6 +37,10 @@ abstract class SimpleLightScreen(sealedActivity: SealedLightActivity) {
         onAppPause()
     }
 
+    internal open fun destroy() {
+        viewModelStore.clear()
+    }
+
     fun navigateTo(screenFactory: (SealedLightActivity) -> SimpleLightScreen) {
         val screen = screenFactory(SealedLightActivity(activity))
         activity.navigateTo(screen)
@@ -56,7 +64,7 @@ abstract class LightScreen<VM : LightViewModel>(
                 return createViewModel() as T
             }
         }
-        ViewModelProvider(activity, factory)[viewModelClass]
+        ViewModelProvider(this, factory)[viewModelClass]
     }
 
     internal override fun notifyWillShow() {

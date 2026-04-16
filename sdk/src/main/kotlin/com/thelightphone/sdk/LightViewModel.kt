@@ -6,5 +6,9 @@ abstract class LightViewModel : ViewModel() {
     open fun onScreenShow(screen: SimpleLightScreen) {}
     open fun onScreenHide(screen: SimpleLightScreen) {}
     open fun onAppPause() {}
+
+    /**
+     * returns false if the ViewModel does not consume the back button event
+     */
     open fun onBackPressed(): Boolean = false
 }
