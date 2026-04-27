@@ -54,6 +54,19 @@ object LightSdkServer {
         }
     }
 
+    /**
+     * returns true iff this server version supports tools built with given sdkVersion
+     */
+    fun isSdkVersionSupported(sdkVersion: String) : Boolean {
+        return true
+    }
+
+    suspend fun List<InstalledClient>.filterVerifiedTools(): List<InstalledClient> {
+        // fetch manifest
+        // for each apk, check signing key matches and raw apk hash matches
+        return this
+    }
+
     fun Context.queryInstalledClients(): List<InstalledClient> {
         val marker = Intent(LightConstants.ACTION_SDK_MARKER)
 

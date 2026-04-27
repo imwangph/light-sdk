@@ -32,11 +32,10 @@ import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.lifecycle.lifecycleScope
+import com.thelightphone.sdk.server.LightSdkServer
+import com.thelightphone.sdk.server.LightSdkServer.filterVerifiedTools
 import com.thelightphone.sdk.server.LightSdkServer.queryInstalledClients
 import com.thelightphone.sdk.server.LightSdkServer.runningAsSystemApp
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,11 +62,14 @@ class MainActivity : ComponentActivity() {
             ) {
                 ToolList(
                     fetchExternalTools = {
-                        queryInstalledClients().map {
-                            val appInfo = it.packageInfo.applicationInfo!!
-                            val label = packageManager.getApplicationLabel(appInfo).toString()
-                            Tool(label, it.packageInfo.packageName)
-                        }
+                        queryInstalledClients()
+                            .filter { LightSdkServer.isSdkVersionSupported(it.sdkVersion) }
+                            .filterVerifiedTools()
+                            .map {
+                                val appInfo = it.packageInfo.applicationInfo!!
+                                val label = packageManager.getApplicationLabel(appInfo).toString()
+                                Tool(label, it.packageInfo.packageName)
+                            }
                     }, launchPackage = {
                         packageManager.getLaunchIntentForPackage(it)?.let { intent ->
                             startActivity(intent)
