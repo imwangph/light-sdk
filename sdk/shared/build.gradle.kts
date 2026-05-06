@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.serialization)
+    `maven-publish`
 }
 
 group = property("sdkGroup") as String
@@ -14,6 +15,17 @@ java {
 kotlin {
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget(rootProject.ext["jvmTarget"] as String))
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            from(components["java"])
+            groupId = property("sdkGroup") as String
+            artifactId = "sdk-shared"
+            version = property("sdkVersion") as String
+        }
     }
 }
 
